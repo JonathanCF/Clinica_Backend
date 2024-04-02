@@ -3,12 +3,21 @@ import { AuthUserService } from "../../services/users/AuthUserService";
 
 class AuthUserController {
   async handle(req: Request, res: Response) {
-    const { email, password } = req.body;
-    const authUserService = new AuthUserService();
+    try {
+      const { email, password } = req.body;
 
-    const auth = await authUserService.execute({ email, password });
+      const authUserService = new AuthUserService();
 
-    return res.json(auth);
+      const auth = await authUserService.execute({
+        email,
+        password,
+      });
+
+      return res.json(auth);
+    } catch (error) {
+      // Trate o erro de forma apropriada
+      return res.status(500).json({ error: error.message });
+    }
   }
 }
 
