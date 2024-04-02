@@ -9,44 +9,56 @@ interface AuthRequest {
 
 class AuthUserService {
   async execute({ email, password }: AuthRequest) {
-    //Verificar se email existe
-    const user = await prismaClient.user.findUnique({
-      where: {
-        email: email,
-      },
-    });
+    try {
+      //Verificar se email existe
+      const user = await prismaClient.user.findUnique({
+        where: {
+          email: email,
+        },
+      });
 
-    if (!user) {
-      throw new Error("Usuário/senha incorreto!!");
-    }
-    //verificar se a senha esta correta
-    const passwordMatch = await compare(password, user.password);
+      if (!user) {
+        throw new Error("Usuário não encontrado");
+      }
 
-    if (!passwordMatch) {
-      throw new Error("Usuário/senha incorreto!!");
-    }
+      //verificar se a senha está correta
+      const passwordMatch = await compare(password, user.password);
 
-    //gerar um token JWT e devolver os dados do usuario como id, email, name
+      if (!passwordMatch) {
+        throw new Error("Senha incorreta");
+      }
 
-    const token = sign(
-      {
+      //gerar um token JWT e devolver os dados do usuário como id, email, name
+      const token = sign(
+        {
+          name: user.name,
+          email: user.email,
+        },
+        process.env.JWT_SECRET,
+        {
+          subject: user.id,
+          expiresIn: "30d",
+        }
+      );
+
+      return {
+        id: user.id,
         name: user.name,
         email: user.email,
-      },
-      process.env.JWT_SECRET,
-      {
-        subject: user.id,
-        expiresIn: "30d",
+        token: token,
+      };
+    } catch (error) {
+      // Trate o erro de forma apropriada
+      if (
+        error.message === "Usuário não encontrado" ||
+        error.message === "Senha incorreta"
+      ) {
+        // Caso seja erro de usuário/senha incorretos
+        throw new Error("Usuário ou senha incorretos");
+      } else {
+        // Para outros erros não esperados, apenas relançamos o erro original
+        throw error;
       }
-    );
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      token: token,
-    };
+    }
   }
 }
-
-export { AuthUserService };
