@@ -62,3 +62,5 @@ class AuthUserService {
     }
   }
 }
+
+export { AuthUserService };
