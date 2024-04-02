@@ -10,7 +10,7 @@ interface AuthRequest {
 class AuthUserService {
   async execute({ email, password }: AuthRequest) {
     //Verificar se email existe
-    const user = await prismaClient.user.findFirst({
+    const user = await prismaClient.user.findUnique({
       where: {
         email: email,
       },
